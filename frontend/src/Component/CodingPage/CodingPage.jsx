@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import TextField from "@mui/material/TextField";
-import { Box, MenuItem, Button } from "@mui/material";
+import { Box, MenuItem, Button, Snackbar } from "@mui/material";
 import styles from "./codingPage.module.scss";
 import axios from "axios";
+import { trimExtraLinesAndSpaces } from "../../utils";
 
 const CodingPage = () => {
   const [sourceCode, setSourceCode] = useState("");
@@ -12,29 +13,51 @@ const CodingPage = () => {
   const [username, setUsername] = useState("");
   const [stderr, setStderr] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState(null);
+  const [isSaveSubmissionLoading, setIsSaveSubmissionLoading] = useState(false);
 
-  // replace the multiple white spaces with single white space from the string e.g '2  3  5 6' -> '2 3 5 6'
-  const trimExtraSpaces = (text) => text.replace(/ {2,}/g, " ");
-
-  // replace the multiple lines or lines with spaces at the end with single line e.g '2\n\n 3' -> '2\n3' ,'2\n 3' -> '2\n3'
-  const trimExtraLines = (text) => text.replace(/\n{1,} {0,}/g, "\n");
-
-  const trimExtraLinesAndSpaces = (text) =>
-    trimExtraSpaces(trimExtraLines(text));
+  const resetToDefault = () => {
+    setSourceCode("");
+    setStdin("");
+    setStdout("");
+    setLanguage("");
+    setUsername("");
+    setStderr("");
+  };
 
   const runTest = async () => {
     setIsLoading(true);
-    const result = await axios.post("http://localhost:5000/api/submit", {
-        language_id: language,
-        source_code: btoa(trimExtraLinesAndSpaces(sourceCode)),
-        stdin: btoa(trimExtraLinesAndSpaces(stdin)),
+    setStdout("");
+    const result = await axios.post("/submission/execute", {
+      language_id: language,
+      source_code: btoa(trimExtraLinesAndSpaces(sourceCode)),
+      stdin: btoa(trimExtraLinesAndSpaces(stdin)),
     });
 
-    if(result.data.stderr) {
+    if (result.data.stderr) {
       setStderr(atob(result.data.stderr));
-    }else
-      setStdout(atob(result.data.stdout))
+    } else setStdout(atob(result.data.stdout));
     setIsLoading(false);
+  };
+
+  const saveSubmission = async () => {
+    try {
+      setIsSaveSubmissionLoading(true);
+      const requestBody = {
+        username,
+        languageId: language,
+        sourceCode: btoa(trimExtraLinesAndSpaces(sourceCode)),
+      };
+      if (stdin) {
+        requestBody.stdin = btoa(trimExtraLinesAndSpaces(stdin));
+      }
+      await axios.post("/submission", requestBody);
+      setSnackbarMessage("Submission Saved SuccessFully !");
+      setIsSaveSubmissionLoading(false);
+      resetToDefault();
+    } catch (err) {
+      setSnackbarMessage("Error in saving submission !");
+    }
   };
 
   return (
@@ -95,19 +118,33 @@ const CodingPage = () => {
           onClick={runTest}
           variant="outlined"
           className={styles.submit_button}
-          disabled={!username || !language || !sourceCode || isLoading}
+          disabled={
+            !language || !sourceCode || isLoading || isSaveSubmissionLoading
+          }
         >
           Run code
         </Button>
         <Button
-          onClick={runTest}
+          onClick={saveSubmission}
           variant="contained"
           className={styles.submit_button}
-          disabled={!username || !language || !sourceCode || isLoading}
+          disabled={
+            !username ||
+            !language ||
+            !sourceCode ||
+            isLoading ||
+            isSaveSubmissionLoading
+          }
         >
           Submit code
         </Button>
       </div>
+      <Snackbar
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        open={snackbarMessage !== null}
+        onClose={() => setSnackbarMessage(null)}
+        message={snackbarMessage}
+      />
     </Box>
   );
 };

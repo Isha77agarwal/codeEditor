@@ -1,5 +1,5 @@
 import CodingPage from "./Component/CodingPage/CodingPage";
-import SubmissionsTable from "./Component/SubmissionsTable";
+import SubmissionsTable from "./Component/Submissions/SubmissionsTable";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 function App() {
