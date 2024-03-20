@@ -1,0 +1,43 @@
+.main_container {
+  display: flex;
+  flex-direction: column;
+
+  .header_input {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+
+    .username_input,
+    .language_input {
+      width: 35%;
+      margin: 2%;
+    }
+  }
+
+  .code_container {
+    display: flex;
+
+    .sourceCode_input {
+      width: 70%;
+      margin: 2%;
+      overflow: auto;
+    }
+
+    .io_container {
+      margin: 2%;
+
+      .standard_input,
+      .standard_output {
+        margin-bottom: 4%;
+        overflow: auto;
+      }
+    }
+  }
+
+  .button_container {
+    display: flex;
+    margin: 2%;
+    gap: 2%;
+  }
+}
