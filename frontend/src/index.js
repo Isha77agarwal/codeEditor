@@ -4,7 +4,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import axios from "axios";
 
-axios.defaults.baseURL = "https://codeeditor-nbl0.onrender.com";
+axios.defaults.baseURL = "https://codeeditor-nbl0.onrender.com/api";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
