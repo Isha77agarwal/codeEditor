@@ -1,5 +1,6 @@
 import expressAsyncHandler from "express-async-handler";
 import axios from "axios";
+import CodeSubmissions from "../models/codeSubmissions.js";
 
 //@desc get output of code
 //@route /api/submit
@@ -17,7 +18,7 @@ export const testSubmission = expressAsyncHandler(async (req, res) => {
     headers: {
       "content-type": "application/json",
       "Content-Type": "application/json",
-      "X-RapidAPI-Key": "f714aa826amsh84e320423bc7082p18261bjsnf14fc7cafe5a",
+      "X-RapidAPI-Key": process.env.RAPID_API_KEY,
       "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
     },
     data: {
@@ -33,4 +34,45 @@ export const testSubmission = expressAsyncHandler(async (req, res) => {
   } catch (error) {
     console.error(error);
   }
+});
+
+export const addSubmission = expressAsyncHandler(async (req, res) => {
+  const submissionData = req.body;
+
+  const codeSubmission = new CodeSubmissions(submissionData);
+  await codeSubmission.save();
+
+  res.status(201).json(codeSubmission);
+});
+
+export const getSubmissions = expressAsyncHandler(async (req, res) => {
+  const submissionData = req.query;
+  const query = {};
+
+  const limit = submissionData.limit || 10;
+  const skip = submissionData.skip || 0;
+  if (submissionData.username) {
+    if (Array.isArray(submissionData.username)) {
+      query.username = { $in: submissionData.username };
+    } else {
+      query.username = submissionData.username;
+    }
+  }
+
+  if (submissionData.languageId) {
+    if (Array.isArray(submissionData.languageId)) {
+      query.languageId = {
+        $in: submissionData.languageId.map((id) => parseInt(id)),
+      };
+    } else {
+      query.languageId = parseInt(submissionData.languageId);
+    }
+  }
+
+  const codeSubmissions = await CodeSubmissions.find(query)
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  res.status(201).json(codeSubmissions);
 });
